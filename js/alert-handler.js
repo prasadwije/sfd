@@ -147,7 +147,7 @@ async function sendAlertConfirmation(waitUrl, clearUrl) {
         // This is a separate call to a different N8N webhook (Workflow F) to mark the alert as CLEARED.
         
         // Final clear URL (e.g., API_URL_ALERT_CLEAR + ?status=CLEARED)
-        const clearStatusUrl = clearUrl + (clearUrl.includes('?') ? '&' : '?') + 'status=CLEARED';
+        const clearStatusUrl = clearUrl;
 
         const clearResponse = await fetch(clearStatusUrl, { method: 'GET' });
 
@@ -180,3 +180,4 @@ document.addEventListener('DOMContentLoaded', () => {
     // Delay start slightly to ensure initial task fetch runs first
     setTimeout(startAlertPolling, 5000); 
 });
+
