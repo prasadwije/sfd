@@ -125,36 +125,44 @@ function displayServerAlert(alertData) {
 }
 
 
-async function sendAlertConfirmation(clearUrl) {
+async function sendAlertConfirmation(waitUrl, clearUrl) {
     try {
-        // FIX: Switching to GET method to see if the browser security allows the simple request, 
-        // avoiding the complex CORS preflight check required by POST.
-        // We pass the status as a query parameter.
+        // --- ACTION 1: RELEASE THE N8N WAIT NODE (Confirms User is present) ---
+        // The wait URL must be called FIRST to release the blocked workflow execution.
         
-        // We append the status as a query parameter directly to the URL
-        const confirmationUrl = clearUrl;
+        // We ensure a simple GET request for max compatibility
+        const releaseWaitUrl = waitUrl; 
 
-        const response = await fetch(confirmationUrl, { 
-            method: 'GET', // Changed from POST to GET
-            // NOTE: We remove headers and body entirely as they are not needed for a simple GET
-        });
+        const waitResponse = await fetch(releaseWaitUrl, { method: 'GET' });
         
-        // CRITICAL FIX: Handle successful status codes and 409 Conflict
-        if (response.status === 409) {
-            // If N8N returns 409 (Conflict), it means the Wait Node already timed out/cleared.
-            console.warn("Alert cleared via Timeout (409 Conflict). Treating as success.");
-        } else if (!response.ok) {
-            // General HTTP error
-            throw new Error(`Failed to confirm alert. Status: ${response.status}`);
+        // Check if the Wait Node was successfully released (Status 200/204 or expected 409 if it timed out just now)
+        if (waitResponse.status === 409) {
+             console.warn("Wait Node already cleared via Timeout (409 Conflict). Proceeding to clear alert.");
+             // We treat this as a success for the wait action
+        } else if (!waitResponse.ok) {
+             throw new Error(`Failed to release N8N Wait Node. Status: ${waitResponse.status}`);
         }
         
-        // After successful confirmation, restart the general task fetch and polling
+        // --- ACTION 2: CLEAR THE ALERT STATUS IN GOOGLE SHEET / N8N (Permanent Clear) ---
+        // This is a separate call to a different N8N webhook (Workflow F) to mark the alert as CLEARED.
+        
+        // Final clear URL (e.g., API_URL_ALERT_CLEAR + ?status=CLEARED)
+        const clearStatusUrl = clearUrl + (clearUrl.includes('?') ? '&' : '?') + 'status=CLEARED';
+
+        const clearResponse = await fetch(clearStatusUrl, { method: 'GET' });
+
+        if (!clearResponse.ok) {
+             throw new Error(`Failed to clear alert status. Status: ${clearResponse.status}`);
+        }
+        
+        // --- FINAL SUCCESS ---
+        // After both steps succeed, restart the application state
         fetchAndRenderTasks();
         startAlertPolling(); 
         
     } catch (error) {
-        console.error('Failed to clear alert to N8N:', error);
-        alert('Confirmation failed. Please check your N8N CORS/URL setup.');
+        console.error('Failed to clear alert sequence:', error);
+        alert('Confirmation failed. Please check your N8N URL/Origin setup.');
     }
 }
 
@@ -172,4 +180,3 @@ document.addEventListener('DOMContentLoaded', () => {
     // Delay start slightly to ensure initial task fetch runs first
     setTimeout(startAlertPolling, 5000); 
 });
-
