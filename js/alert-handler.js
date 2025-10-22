@@ -97,31 +97,43 @@ function displayServerAlert(alertData) {
     // Play alert sound 
     playSound('PAUSED'); 
 
-    // Show the dedicated alert popup
+    // 1. Show the dedicated alert popup
     ALERT_DOM.overlay.classList.remove('hidden');
     ALERT_DOM.timerDisplay.textContent = 'CHECK!'; 
-    ALERT_DOM.messageArea.innerHTML = `<p>⚠️ SERVER ALERT: ${alertData.message}</p>
-                                       <p>Confirm to continue working.</p>`;
+
+    // --- CRITICAL FIX: Set Custom Messages based on alert type ---
+    let messageHTML = '';
     
-    // Update the button to send the confirmation URL
+    if (alertData.type === 'MANUAL_PAUSE') {
+        // This is not a server alert, but a user intent confirmation (Pure Break)
+        messageHTML = `<p>TAKE A BREAK</p>
+                       <p class="overlay-message">Your work is paused. Continue when ready.</p>`;
+    } else {
+        // Server Alert (30 min check)
+        messageHTML = `<p>⚠️ SERVER ALERT: ${alertData.message || 'Activity Check'}</p>
+                       <p class="overlay-message">Confirm to continue working.</p>`;
+    }
+
+    ALERT_DOM.messageArea.innerHTML = messageHTML;
+    
+    // 2. Update the button to send the confirmation URL
     ALERT_DOM.confirmButton.textContent = 'CONFIRM WORKING';
     
-    // Temporarily replace the click listener with the alert confirmation logic
+    // ... (rest of the button listener logic remains the same) ...
+    
     const oldListener = ALERT_DOM.confirmButton.__currentListener;
     if (oldListener) ALERT_DOM.confirmButton.removeEventListener('click', oldListener);
 
     const newListener = () => {
-        // On confirmation, call the N8N Clear endpoint
         sendAlertConfirmation(confirmUrl);
         
-        // Instant removal of the UI
         ALERT_DOM.overlay.classList.add('hidden'); 
-        ALERT_DOM.confirmButton.removeEventListener('click', newListener); // Remove self
+        ALERT_DOM.confirmButton.removeEventListener('click', newListener); 
         ALERT_DOM.confirmButton.__currentListener = null;
     };
     
     ALERT_DOM.confirmButton.addEventListener('click', newListener);
-    ALERT_DOM.confirmButton.__currentListener = newListener; // Store reference
+    ALERT_DOM.confirmButton.__currentListener = newListener; 
 }
 
 
@@ -173,6 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Delay start slightly to ensure initial task fetch runs first
     setTimeout(startAlertPolling, 5000); 
 });
+
 
 
 
