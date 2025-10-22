@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SFD: Focus Agent</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=SF+Pro+Text:wght@400;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://d3js.org/d3.v7.min.js" defer></script>
+</head>
+<body>
+
+    <!-- 1. PAUSE / BREAK OVERLAY (Unchanged) -->
+    <div id="pause-overlay" class="overlay hidden">
+        <div class="overlay-content">
+            <div id="pause-timer" class="break-timer">--:--:--</div>
+            <p class="overlay-message">Your work is paused.</p>
+            <button id="continue-button" class="action-button primary-button">
+                <i class="fas fa-play"></i> CONTINUE WORK
+            </button>
+        </div>
+    </div>
+    
+    <!-- 2. MAIN DASHBOARD CONTAINER (FULL SCREEN) -->
+    <div id="dashboard-container" class="dashboard-container">
+
+        <!-- NEW: TOP KPI AND CONTROL AREA (Approx 25% of height) -->
+        <div class="top-kpi-control-area">
+            
+            <div class="pie-charts-wrapper">
+                <!-- CHART 1: Focus Quality -->
+                <div id="focus-quality-chart" class="chart-box"></div>
+                <!-- CHART 2: Day Allocation -->
+                <div id="day-allocation-chart" class="chart-box"></div>
+            </div>
+
+            <!-- RIGHT CONTROL BLOCK (Completed, Break, Refresh) -->
+            <div class="side-controls-block">
+                
+                <!-- Completed Task Counter -->
+                <div id="completed-summary" class="summary-card">
+                    <span id="completed-count" class="summary-value">0</span>
+                    <span class="summary-label">Tasks Completed Today</span>
+                </div>
+
+                <!-- Control Buttons -->
+                <div class="button-group">
+                    <!-- MANUAL BREAK BUTTON -->
+                    <button id="start-break-button" class="control-button primary-button wide-btn disabled">
+                        <i class="fas fa-pause"></i> START BREAK
+                    </button>
+                    <!-- DATA REFRESH BUTTON -->
+                    <button id="refresh-button" class="icon-button refresh-btn">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div> <!-- END top-kpi-control-area -->
+
+        <!-- C. SCROLLABLE TASK LIST SECTION -->
+        <div class="section-title-bar-fixed">
+             <h2 class="section-title" id="task-count">TASKS UP NEXT</h2>
+        </div>
+
+
+        <!-- D. SCROLLABLE TASK LIST (Remaining Height) -->
+        <div class="task-list-wrapper">
+            <div id="task-list-container" class="task-list">
+                <div id="loading-indicator">Loading tasks...</div>
+            </div>
+        </div>
+        
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js" defer></script>
+    <script src="js/app.js" defer></script>
+    <script src="js/alert-handler.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,593 @@
+/* * SMART FOCUS DASHBOARD - FINAL NEXT-LEVEL AESTHETICS
+ * Optimized for iPad Horizontal View (High Contrast, Smart Gradients)
+ */
+
+:root {
+    --color-background: #F0F0F5; /* Very Light Grey */
+    --color-primary-text: #1C1C1E; 
+    --color-secondary-text: #636366; 
+    --color-card-background: #FFFFFF;
+    --color-border: #E0E0E0;
+    --color-shadow-light: rgba(0, 0, 0, 0.04);
+    --color-shadow-medium: rgba(0, 0, 0, 0.15);
+
+    --glass-bg: rgba(255, 255, 255, 0.72);
+    --glass-border: rgba(255, 255, 255, 0.9);
+    --glass-shadow: rgba(0, 0, 0, 0.06);
+
+    /* New: Shadow Colors based on Priority */
+    --shadow-urgent-color: rgba(255, 59, 48, 0.3); /* Red glow */
+    --shadow-high-color: rgba(255, 149, 0, 0.3); /* Orange glow */
+    --shadow-normal-color: rgba(0, 122, 255, 0.2); /* Blue glow */
+    --shadow-none-color: rgba(100, 100, 100, 0.1); /* Subtle gray glow */
+    
+    /* Core Colors */
+    --c-blue: #007AFF; /* Normal Priority / Start Button */
+    --c-green: #34C759; /* Active Time / Complete Button */
+    --c-red: #FF3B30; /* Urgent Priority / Stop Button */
+    --c-orange: #FF9500; /* High Priority / Pause Time */
+
+    /* Gradients (High Contrast Sets) */
+    
+    /* 1. START/RESUME Gradient (Deep Sky Blue) */
+    --gradient-start: linear-gradient(145deg, #1A79DE, var(--c-blue)); 
+
+    /* 2. STOP Gradient (High-Contrast Red) */
+    --gradient-stop: linear-gradient(145deg, #F06A58, var(--c-red)); 
+
+    /* 3. COMPLETE Gradient (Vibrant Green) */
+    --gradient-complete: linear-gradient(145deg, #69E084, var(--c-green)); 
+    
+    /* 4. BREAK Button Gradient (Deep Orange/Brown) */
+    --gradient-break: linear-gradient(145deg, #CC8400, var(--c-orange));
+
+    /* 🌟 Shadows - Multi-layered Depth */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04), 
+                 0 1px 2px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08), 
+                 0 2px 4px rgba(0, 0, 0, 0.06),
+                 inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12), 
+                 0 4px 8px rgba(0, 0, 0, 0.08),
+                 inset 0 2px 0 rgba(255, 255, 255, 0.5);
+    --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.16), 
+                 0 8px 16px rgba(0, 0, 0, 0.1);
+
+
+
+    /* ✨ Animations - Apple Timing */
+    --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --duration-fast: 0.2s;
+    --duration-normal: 0.35s;
+    --duration-slow: 0.6s;
+
+
+    /* 📐 Spacing & Sizing */
+    --radius-sm: 12px;
+    --radius-md: 18px;
+    --radius-lg: 24px;
+    --radius-xl: 32px;
+
+    
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px); /* Starts 20px below its final position */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* CRITICAL FIX: Base Layout & Font */
+html, body {
+    height: 100%;
+    overflow: hidden; 
+    touch-action: none; 
+}
+
+body {
+    font-family: 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background-color: var(--color-background);
+    color: var(--color-primary-text);
+    box-sizing: border-box;
+    font-weight: 400; 
+}
+
+/* Global Button Cleanup (Removes default browser strokes/borders) */
+button {
+    border: none;
+    outline: none !important;
+    background: none;
+    cursor: pointer;
+}
+
+.dashboard-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 25px; 
+    box-sizing: border-box;
+}
+
+/* --- 3. TOP KPI / CONTROL AREA (Chart and Break Buttons) --- */
+.top-kpi-control-area {
+    display: flex;
+    min-height: 200px;
+    max-height: 25%; 
+    gap: 30px; 
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.pie-charts-wrapper {
+    display: flex;
+    gap: 20px;
+    flex-shrink: 0; 
+}
+
+.chart-box {
+    background-color: var(--color-card-background);
+    border-radius: 18px; 
+    box-shadow: 0 10px 25px var(--color-shadow-medium); 
+    padding: 15px;
+    flex: 1;
+    min-width: 230px; 
+    height: 230px; 
+    overflow: hidden;
+}
+
+/* ✨ Glassmorphic Shine Effect */
+.chart-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.8) 50%, 
+        transparent 100%
+    );
+    opacity: 0.6;
+}
+
+.chart-box:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: var(--shadow-xl);
+}
+
+/* Side Control Block */
+.side-controls-block {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-grow: 1;
+    min-width: 250px;
+}
+
+/* Summary Card */
+.summary-card {
+    background-color: var(--color-card-background);
+    padding: 20px;
+    border-radius: 18px;
+    box-shadow: 0 4px 10px var(--color-shadow-light); 
+    text-align: center;
+}
+
+.summary-value {
+    font-size: 38px;
+    font-weight: 700;
+    color: var(--c-green); 
+}
+
+.summary-label {
+    font-size: 13px;
+    color: var(--color-secondary-text);
+    font-weight: 600;
+}
+
+/* Button Group (Break + Refresh) */
+.button-group {
+    display: flex;
+    gap: 12px;
+    padding-top: 15px;
+    padding-left: 120px;
+    
+}
+
+/* Break Button (Custom Brown/Red Gradient) */
+.control-button {
+    /* Adjusted width for START BREAK button */
+    padding: 15px 10px;
+    font-size: 16px;
+    font-weight: 700; 
+    border-radius: 14px; 
+    transition: transform 0.1s ease, box-shadow 0.2s ease;
+    flex-grow: 1;
+    max-width: 200px; /* Limit max width for better spacing */
+}
+
+.control-button.primary-button {
+    background: var(--gradient-break); 
+    color: var(--color-card-background); 
+    box-shadow: 0 4px 10px rgba(255, 149, 0, 0.4); 
+}
+
+/* Common Hover/Active Effects */
+.control-button:hover:not(.disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+}
+
+.control-button:active {
+    transform: translateY(1px) scale(0.98);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.control-button.disabled {
+    opacity: 0.5;
+}
+
+/* Refresh Icon Button */
+.icon-button.refresh-btn {
+    width: 55px;
+    height: 55px;
+    background-color: var(--color-card-background);
+    color: var(--color-secondary-text);
+    box-shadow: 0 2px 5px var(--color-shadow-light); 
+    flex-shrink: 0;
+    border-radius: 16px;
+    
+}
+
+
+/* --- 4. TASK LIST AREA (Scrollable) --- */
+.section-title-bar-fixed {
+    padding-bottom: 15px;
+    padding-top: 10px;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.task-list-wrapper {
+    flex-grow: 1;
+    overflow-y: auto; 
+    -webkit-overflow-scrolling: touch; 
+    padding-right: 5px; 
+}
+
+/* 🎨 Custom Scrollbar - Apple Style */
+.task-list-wrapper::-webkit-scrollbar {
+    width: 8px;
+}
+
+.task-list-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.task-list-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+    transition: background var(--duration-fast);
+}
+
+.task-list-wrapper::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+@media (prefers-color-scheme: dark) {
+    .task-list-wrapper::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+    }
+    .task-list-wrapper::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.25);
+    }
+}
+
+
+
+.task-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--color-card-background);
+    padding: 18px 20px 18px 20px; /* Adjusted padding to be consistent */
+    border-radius: 18px; 
+    box-shadow: 0 4px 12px var(--color-shadow-medium); 
+    /*transition: transform 0.15s ease, box-shadow 0.3s ease;*/
+    margin-bottom: 15px; 
+    position: relative; 
+    
+    /* CRITICAL FIX: Ensure task-item does NOT have a default black border */
+    border: 5px solid transparent; /* Set a transparent border for the whole card */
+    padding-left: 20px; /* Keep padding consistent */ 
+    
+    
+    opacity: 0;
+    transform: translateY(20px); 
+    
+    transition: all var(--duration-slow) var(--ease-smooth);
+    overflow: hidden;
+    animation: slideUp 0.6s var(--ease-smooth) backwards;
+    
+    
+    
+}
+
+/* New CSS class applied by JS to trigger the animation */
+.task-item.animated {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+
+
+.task-item:active {
+    transform: scale(0.99); 
+}
+
+.task-details {
+    flex-grow: 1;
+    margin-right: 20px;
+}
+
+.task-name {
+    font-weight: 700; 
+    font-size: 17px;
+    margin: 0;
+}
+
+/* Priority Bubble Badge (Smart Look) */
+.priority-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 10px;
+    margin-right: 10px;
+    text-transform: uppercase;
+    /* This style is applied by JS using the class names (prio-urgent, etc.) */
+}
+
+/* --- Find this block around line 190 and REPLACE it (Priority Strip Logic) --- */
+.task-item.priority-urgent,
+.task-item.priority-high,
+.task-item.priority-normal,
+.task-item.priority-null,
+.task-item.priority-none {
+    /* Apply color border strip on the left only */
+    border-left: 6px solid; 
+    
+    /* Override padding to remove extra space created by the 'border' property */
+    padding-left: 20px; 
+    
+    /* Ensure border-radius looks clean */
+    border-top-left-radius: 18px;
+    border-bottom-left-radius: 18px; 
+
+    /* Fix: Remove the right border that was accidentally created by the border property */
+    border-top: none !important; 
+    border-bottom: none !important;
+    border-right: none !important; 
+}
+
+.priority-urgent { 
+    border-left-color: var(--c-red) !important;
+    /* FIX: Inner Shadow (Recessed Effect) - NOTE: This requires removing the outer shadow */
+    box-shadow: inset 0 0 10px rgba(255, 58, 48, 0.493); 
+    /*background: linear-gradient(180deg, #ff493f 0%, #E8443A 100%);*/
+}
+.priority-high { 
+    border-left-color: var(--c-orange) !important;
+    box-shadow: inset 0 0 10px rgba(255, 149, 0, 0.445); 
+} 
+.priority-normal { 
+    border-left-color: var(--c-blue) !important;
+    box-shadow: inset 0 0 10px rgba(0, 123, 255, 0.363); 
+}
+.priority-null, .priority-none { 
+    border-left-color: var(--color-border) !important; 
+    /* Default cards do not need a deep inner glow, use a subtle effect */
+    box-shadow: 0 4px 12px var(--color-shadow-light); 
+}
+
+.task-item:active {
+    transform: translateY(-1px) scale(0.99);
+}
+
+/* Priority Color Assignment FIX: Use !important on border-left-color 
+.priority-urgent { border-left-color: var(--c-red) !important; }
+.priority-high { border-left-color: var(--c-orange) !important; } 
+.priority-normal { border-left-color: var(--c-blue) !important; }
+.priority-null, .priority-none { border-left-color: var(--color-border) !important; } */
+
+
+/* Priority Color Assignment FIX */
+/* --- Find this block around line 205 and REPLACE it --- */
+/* Priority Color Assignment FIX: Use !important to ensure color displays 
+
+
+ Color definitions for the badge background and text */
+.prio-urgent { background-color: #FFD2D2; color: var(--c-red); }
+.prio-high { background-color: #FFECC6; color: var(--c-orange); }
+.prio-normal { background-color: #D6E4FF; color: var(--c-blue); }
+.prio-null { background-color: var(--color-button-secondary); color: var(--color-secondary-text); } 
+
+
+/* Task Metadata Row */
+.task-metadata {
+    font-size: 13px;
+    color: var(--color-secondary-text);
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* --- Add this block to your style.css --- */
+
+/* DUE DATE HIGHLIGHTING */
+.overdue {
+    color: var(--c-red) !important; /* Urgent Red */
+    font-weight: 700;
+}
+.due-today {
+    color: var(--c-blue) !important; /* Blue for today's action */
+    font-weight: 700;
+}
+.due-future {
+    /* Uses default secondary text color */
+    color: var(--color-secondary-text) !important; 
+    font-weight: 500;
+}
+
+/* Running Timer Display (HH:MM:SS) */
+.task-time-display {
+    font-weight: 700; 
+    font-size: 17px;
+    color: var(--c-green);
+    font-variant-numeric: tabular-nums; 
+    min-width: 90px; 
+    text-align: right;
+}
+
+/* Task Action Buttons Group */
+.task-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-shrink: 0; 
+}
+
+/* ICON Buttons for Task Actions */
+.task-actions .icon-button {
+    width: 45px; 
+    height: 45px;
+    font-size: 18px;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px var(--color-shadow-light);
+    color: var(--color-card-background); /* White Icons */
+}
+
+/* START Button Gradient */
+.task-actions .icon-button.action-start {
+    background: var(--gradient-start);
+    color: var(--color-card-background);
+}
+
+/* STOP Button Gradient */
+.task-actions .icon-button.action-stop {
+    background: var(--gradient-stop); 
+}
+
+/* COMPLETE Button Gradient */
+.task-actions .icon-button.action-done {
+    background: var(--gradient-complete);
+}
+
+/* Common Hover/Active Effects for Task Buttons */
+.task-actions .icon-button:hover {
+    transform: translateY(-1px);
+}
+.task-actions .icon-button:active {
+    transform: scale(0.9);
+}
+
+
+
+
+
+/* --- 7. OVERLAY STYLING (Break Mode - CRITICAL FIX) --- */
+.overlay {
+    /* CRITICAL FIX: Ensure the overlay covers everything and hides correctly */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.95); 
+    backdrop-filter: blur(15px); 
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s ease;
+}
+
+/* CRITICAL FIX: Ensures overlay is completely gone from the flow when hidden */
+.overlay.hidden {
+    display: none;
+    opacity: 0;
+}
+
+.overlay-content {
+    background-color: var(--color-card-background);
+    border-radius: 25px;
+    padding: 60px;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.6);
+}
+
+.break-timer {
+    font-size: 80px;
+    font-weight: 200; 
+    color: var(--c-orange); 
+}
+
+/* Continue Button on Pause Screen (Green Gradient) */
+.overlay-content .primary-button {
+    background: var(--gradient-complete); 
+    box-shadow: 0 4px 10px rgba(52, 199, 89, 0.5);
+    padding: 15px 40px;
+    border-radius: 25px;
+    align-items: center;
+
+    
+}
+
+
+.arc path {
+    /* Multi-layered drop-shadow for a 3D effect:
+       1. Soft general shadow for lift (light)
+       2. Deep shadow offset to the bottom/right (darker, for depth)
+       3. Subtle inner glow to define the edge (lighter color, optional) */
+    
+    /* FIX: Combine drop-shadows for a 3D lifted appearance */
+    filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.3)) /* Deep shadow for depth */
+            drop-shadow(-1px -1px 2px rgba(255, 255, 255, 0.4)); /* Subtle top-left highlight (for light source) */
+    
+    transition: all 0.3s ease;
+    stroke: none !important;
+}
+
+/* Optional: Hover effect for interactivity */
+.arc path:hover {
+    filter: drop-shadow(0px 6px 10px rgba(0, 0, 0, 0.4)) 
+            drop-shadow(-1px -1px 1px rgba(255, 255, 255, 0.6));
+    transform: scale(1.02); /* Slight zoom effect on touch/hover */
+}
+
+/* --- Add this new block to style.css for Gradient Definitions --- */
+
+/* 9. SVG GRADIENT DEFINITIONS (Used by D3) */
+/* The SVG fill URL is set dynamically in JS, but these definitions must exist */
+
+
+#grad-work stop { stop-color: var(--c-green); }
+#grad-work stop:first-child { stop-color: #69E084; /* Lighter start */ }
+
+/* Social Media (Red/Urgent) */
+#grad-social stop { stop-color: var(--c-red); }
+#grad-social stop:first-child { stop-color: #FF5555; /* Lighter start */ }
+
+
