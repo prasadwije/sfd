@@ -127,21 +127,18 @@ function displayServerAlert(alertData) {
 
 async function sendAlertConfirmation(clearUrl) {
     try {
-        // We MUST use the POST method and send an explicit JSON payload to satisfy CORS preflight requests 
-        // and ensure N8N processes it correctly.
+        // We use fetch with POST method to satisfy the CORS preflight request
         const response = await fetch(clearUrl, { 
-            method: 'POST', // Use POST method
+            method: 'POST', 
             headers: { 
                 'Content-Type': 'application/json',
-                // N8N MUST be configured to allow * or http://127.0.0.1:5500 for this to work
-                'Access-Control-Allow-Origin': 'http://127.0.0.1:5500' 
             },
             body: JSON.stringify({ status: 'CLEARED' }) 
         });
         
         // CRITICAL FIX: Handle successful status codes and 409 Conflict
         if (response.status === 409) {
-            // If N8N returns 409, it means the Wait Node already timed out/cleared.
+            // If N8N returns 409 (Conflict), it means the Wait Node already timed out/cleared.
             console.warn("Alert cleared via Timeout (409 Conflict). Treating as success.");
         } else if (!response.ok) {
             // General HTTP error
