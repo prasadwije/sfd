@@ -274,7 +274,7 @@ function renderTaskList() {
         }
         
         // 2. Task variables
-        const priorityClass = `priority-${task.priority}`; 
+        const priorityClass = `priority-${task.priority}`; // DEFINED HERE
         
         const totalDurationMs = durationStringToMs(task.projectDuration);
         const staticDurationDisplay = formatMsToHHMMSS(totalDurationMs);
@@ -295,7 +295,7 @@ function renderTaskList() {
         }
 
         const taskItem = document.createElement('div');
-        taskItem.className = `task-item ${priorityClass}`; 
+        taskItem.className = `task-item ${priorityClass}`; // priorityClass is correctly used here
         
         taskItem.innerHTML = `
             <div class="task-details">
@@ -318,9 +318,10 @@ function renderTaskList() {
         `;
         D.taskListContainer.appendChild(taskItem);
 
-        // --- STAGGERED ANIMATION LOGIC ---
+        // --- STAGGERED ANIMATION LOGIC (Retained) ---
         // This makes the tasks fade in one after another
         setTimeout(() => {
+            // CRITICAL: Ensure visibility is set to 1 for the animation
             taskItem.style.opacity = 1;
             taskItem.style.transform = 'translateY(0)';
         }, index * 50); 
