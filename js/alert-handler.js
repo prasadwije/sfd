@@ -127,27 +127,21 @@ function displayServerAlert(alertData) {
 
 async function sendAlertConfirmation(waitUrl, clearUrl) {
     try {
-        // --- ACTION 1: RELEASE THE N8N WAIT NODE (Confirms User is present) ---
-        // The wait URL must be called FIRST to release the blocked workflow execution.
-        
-        // We ensure a simple GET request for max compatibility
+        // --- STEP 1: RELEASE THE N8N WAIT NODE ---
         const releaseWaitUrl = waitUrl; 
-
+        
+        // Use the simple GET request
         const waitResponse = await fetch(releaseWaitUrl, { method: 'GET' });
         
-        // Check if the Wait Node was successfully released (Status 200/204 or expected 409 if it timed out just now)
-        if (waitResponse.status === 409) {
-             console.warn("Wait Node already cleared via Timeout (409 Conflict). Proceeding to clear alert.");
-             // We treat this as a success for the wait action
-        } else if (!waitResponse.ok) {
+        // CRITICAL FIX: The response might be '200 OK' but contain NO JSON body. 
+        // We only check if the network call was successful (status < 400).
+        if (!waitResponse.ok && waitResponse.status !== 409) {
              throw new Error(`Failed to release N8N Wait Node. Status: ${waitResponse.status}`);
         }
         
-        // --- ACTION 2: CLEAR THE ALERT STATUS IN GOOGLE SHEET / N8N (Permanent Clear) ---
-        // This is a separate call to a different N8N webhook (Workflow F) to mark the alert as CLEARED.
+        // --- STEP 2: CLEAR THE ALERT STATUS (Permanent Clear) ---
         
-        // Final clear URL (e.g., API_URL_ALERT_CLEAR + ?status=CLEARED)
-        const clearStatusUrl = clearUrl;
+        const clearStatusUrl = clearUrl + (clearUrl.includes('?') ? '&' : '?') + 'status=CLEARED';
 
         const clearResponse = await fetch(clearStatusUrl, { method: 'GET' });
 
@@ -156,7 +150,7 @@ async function sendAlertConfirmation(waitUrl, clearUrl) {
         }
         
         // --- FINAL SUCCESS ---
-        // After both steps succeed, restart the application state
+        // After both steps succeed, update the application state
         fetchAndRenderTasks();
         startAlertPolling(); 
         
@@ -180,4 +174,5 @@ document.addEventListener('DOMContentLoaded', () => {
     // Delay start slightly to ensure initial task fetch runs first
     setTimeout(startAlertPolling, 5000); 
 });
+
 
