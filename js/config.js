@@ -31,4 +31,5 @@ const CONFIG = {
     
     // Critical sound for PAUSE/BREAK (State change)
     SOUND_ALERT_PAUSE: "assets/sound/chime_pause.mp3",
+
 };
