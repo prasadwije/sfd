@@ -125,23 +125,24 @@ function displayServerAlert(alertData) {
 }
 
 
-async function sendAlertConfirmation(waitUrl, clearUrl) {
+async function sendAlertConfirmation(waitUrl) {
     try {
-        // --- STEP 1: RELEASE THE N8N WAIT NODE ---
-        const releaseWaitUrl = waitUrl; 
+        // We get the clear URL from the global CONFIG object
+        const clearStatusBaseUrl = CONFIG.API_URL_ALERT_CLEAR; 
         
-        // Use the simple GET request
-        const waitResponse = await fetch(releaseWaitUrl, { method: 'GET' });
+        // --- ACTION 1: RELEASE THE N8N WAIT NODE (Confirms User is present) ---
+        const waitResponse = await fetch(waitUrl, { method: 'GET' });
         
-        // CRITICAL FIX: The response might be '200 OK' but contain NO JSON body. 
-        // We only check if the network call was successful (status < 400).
-        if (!waitResponse.ok && waitResponse.status !== 409) {
+        if (waitResponse.status === 409) {
+            console.warn("Wait Node already cleared via Timeout (409 Conflict). Proceeding to clear status.");
+        } else if (!waitResponse.ok) {
              throw new Error(`Failed to release N8N Wait Node. Status: ${waitResponse.status}`);
         }
         
-        // --- STEP 2: CLEAR THE ALERT STATUS (Permanent Clear) ---
+        // --- ACTION 2: CLEAR THE ALERT STATUS (Permanent Clear) ---
         
-        const clearStatusUrl = clearUrl + (clearUrl.includes('?') ? '&' : '?') + 'status=CLEARED';
+        // This is a direct call to the Workflow F Clear Endpoint
+        const clearStatusUrl = clearStatusBaseUrl;
 
         const clearResponse = await fetch(clearStatusUrl, { method: 'GET' });
 
@@ -150,7 +151,6 @@ async function sendAlertConfirmation(waitUrl, clearUrl) {
         }
         
         // --- FINAL SUCCESS ---
-        // After both steps succeed, update the application state
         fetchAndRenderTasks();
         startAlertPolling(); 
         
@@ -159,7 +159,6 @@ async function sendAlertConfirmation(waitUrl, clearUrl) {
         alert('Confirmation failed. Please check your N8N URL/Origin setup.');
     }
 }
-
 
 // --- EXPOSE/INTEGRATE WITH APP.JS ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -174,5 +173,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Delay start slightly to ensure initial task fetch runs first
     setTimeout(startAlertPolling, 5000); 
 });
+
 
 
