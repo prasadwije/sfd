@@ -127,13 +127,16 @@ function displayServerAlert(alertData) {
 
 async function sendAlertConfirmation(clearUrl) {
     try {
-        // We use fetch with POST method to satisfy the CORS preflight request
-        const response = await fetch(clearUrl, { 
-            method: 'POST', 
-            headers: { 
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ status: 'CLEARED' }) 
+        // FIX: Switching to GET method to see if the browser security allows the simple request, 
+        // avoiding the complex CORS preflight check required by POST.
+        // We pass the status as a query parameter.
+        
+        // We append the status as a query parameter directly to the URL
+        const confirmationUrl = clearUrl + '?status=CLEARED';
+
+        const response = await fetch(confirmationUrl, { 
+            method: 'GET', // Changed from POST to GET
+            // NOTE: We remove headers and body entirely as they are not needed for a simple GET
         });
         
         // CRITICAL FIX: Handle successful status codes and 409 Conflict
