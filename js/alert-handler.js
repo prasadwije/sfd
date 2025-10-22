@@ -132,7 +132,7 @@ async function sendAlertConfirmation(clearUrl) {
         // We pass the status as a query parameter.
         
         // We append the status as a query parameter directly to the URL
-        const confirmationUrl = clearUrl + '?status=CLEARED';
+        const confirmationUrl = clearUrl;
 
         const response = await fetch(confirmationUrl, { 
             method: 'GET', // Changed from POST to GET
@@ -172,3 +172,4 @@ document.addEventListener('DOMContentLoaded', () => {
     // Delay start slightly to ensure initial task fetch runs first
     setTimeout(startAlertPolling, 5000); 
 });
+
