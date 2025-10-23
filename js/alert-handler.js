@@ -40,11 +40,18 @@ async function fetchAlertStatus() {
     }
     
     try {
-        // FIX: Add a Cache Buster to the URL to force the browser to fetch fresh data
+        // FIX: Add a strong Cache Buster and Cache Control Headers for the fetch call
         const cacheBuster = `&t=${new Date().getTime()}`; 
         const pollingUrl = CONFIG.PUBLIC_ALERT_CSV_URL + cacheBuster;
 
-        const response = await fetch(pollingUrl);
+        const response = await fetch(pollingUrl, {
+             cache: 'no-store', // Force browser not to use local cache
+             headers: {
+                 'Cache-Control': 'no-cache, no-store, must-revalidate',
+                 'Pragma': 'no-cache',
+                 'Expires': '0'
+             }
+        });
         
         if (!response.ok) {
              console.warn('CSV Fetch Failed (CORS or 404).');
@@ -135,15 +142,13 @@ function displayServerAlert(alertData) {
 
 
 async function sendAlertConfirmation(waitUrl) {
-    // CRITICAL FIX 1: Stop the polling loop immediately before any fetch call
+    // CRITICAL FIX 1: Stop the polling loop immediately 
     clearInterval(alertPollingIntervalId); 
     alertPollingIntervalId = null;
 
     try {
-        // --- ACTION 1: RELEASE THE N8N WAIT NODE (Confirms User is present) ---
+        // 1. RELEASE THE N8N WAIT NODE (Confirms User is present)
         const releaseWaitUrl = waitUrl; 
-        
-        // This stops the Workflow C timeout timer
         const waitResponse = await fetch(releaseWaitUrl, { method: 'GET' });
         
         if (waitResponse.status === 409) {
@@ -152,30 +157,29 @@ async function sendAlertConfirmation(waitUrl) {
              throw new Error(`Failed to release N8N Wait Node. Status: ${waitResponse.status}`);
         }
         
-        // --- ACTION 2: CLEAR THE ALERT STATUS (Permanent Clear) ---
-        // We get the clear URL from the global CONFIG object
+        // 2. CLEAR THE ALERT STATUS (Permanent Clear)
         const clearStatusBaseUrl = CONFIG.API_URL_ALERT_CLEAR; 
         const clearStatusUrl = clearStatusBaseUrl;
 
-        // This second GET call updates the Google Sheet/Alert status to CLEARED.
         const clearResponse = await fetch(clearStatusUrl, { method: 'GET' });
 
         if (!clearResponse.ok) {
              throw new Error(`Failed to clear alert status. Status: ${clearResponse.status}`);
         }
         
-        // --- FINAL SUCCESS AND RESTART ---
+        // --- FINAL SUCCESS AND DELAYED RESTART ---
         
-        // 1. Refresh Task List
+        // Refresh Task List (App.js) immediately
         fetchAndRenderTasks(); 
+        fetchAndRenderKPI();
         
-        // 2. CRITICAL FIX 2: Delayed Restart of Polling Loop
-        // Wait 3 seconds to allow Google Sheets/N8N to update the status before polling starts again.
-        setTimeout(startAlertPolling, 3000); 
+        // CRITICAL FIX 2: Delayed Restart (Wait 10 seconds for Google Sheets to PUBLISH the change)
+        // Google Sheets can take 5-10 seconds to update the public CSV view.
+        setTimeout(startAlertPolling, 10000); // Wait 10 seconds before polling again
         
     } catch (error) {
         console.error('Failed to clear alert sequence:', error);
-        // If error, just restart polling after a delay to re-check the alert state
+        // If error, restart polling after a shorter delay to retry the clear process
         setTimeout(startAlertPolling, 5000); 
         alert('Confirmation failed. Please check your N8N URL/Origin setup.');
     }
@@ -194,6 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Delay start slightly to ensure initial task fetch runs first
     setTimeout(startAlertPolling, 5000); 
 });
+
 
 
 
