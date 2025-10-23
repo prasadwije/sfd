@@ -465,19 +465,20 @@ button {
 /* Task Action Buttons Group */
 .task-actions {
     display: flex;
-    gap: 10px;
+    gap: 15px;
     align-items: center;
     flex-shrink: 0; 
 }
 
 /* ICON Buttons for Task Actions */
 .task-actions .icon-button {
-    width: 45px; 
-    height: 45px;
-    font-size: 18px;
-    border-radius: 12px;
-    box-shadow: 0 2px 4px var(--color-shadow-light);
+    width: 50px; 
+    height: 50px;
+    font-size: 20px;
+    border-radius: 14px;
+    box-shadow: 0 2px 5px var(--color-shadow-light);
     color: var(--color-card-background); /* White Icons */
+    transition: transform 0.2s var(--ease-spring), box-shadow 0.2s var(--ease-spring);
 }
 
 /* START Button Gradient */
@@ -589,6 +590,7 @@ button {
 /* Social Media (Red/Urgent) */
 #grad-social stop { stop-color: var(--c-red); }
 #grad-social stop:first-child { stop-color: #FF5555; /* Lighter start */ }
+
 
 
 
