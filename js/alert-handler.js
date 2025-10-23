@@ -40,7 +40,11 @@ async function fetchAlertStatus() {
     }
     
     try {
-        const response = await fetch(CONFIG.PUBLIC_ALERT_CSV_URL);
+        // FIX: Add a Cache Buster to the URL to force the browser to fetch fresh data
+        const cacheBuster = `&t=${new Date().getTime()}`; 
+        const pollingUrl = CONFIG.PUBLIC_ALERT_CSV_URL + cacheBuster;
+
+        const response = await fetch(pollingUrl);
         
         if (!response.ok) {
              console.warn('CSV Fetch Failed (CORS or 404).');
@@ -49,20 +53,13 @@ async function fetchAlertStatus() {
         
         const csvText = await response.text();
         
-        // --- CRITICAL TEST LINE ---
-        console.log("--- RAW CSV DATA RECEIVED ---");
-        console.log(csvText); // Print the raw text to console
-        console.log("-----------------------------");
-        
         // --- CSV PARSING LOGIC ---
-        // Expecting data like: Status,Message,WaitID\nPENDING,Your check is due,X123
         const rows = csvText.trim().split('\n');
         if (rows.length < 2) return; 
 
         // Data is expected on the second row (index 1)
         const dataRow = rows[1].split(',');
         
-        // Ensure dataRow has enough columns (at least 3: STATUS, MESSAGE, WAIT_URL)
         if (dataRow.length < 3) return;
 
         const alertStatus = dataRow[0].trim();
@@ -185,6 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Delay start slightly to ensure initial task fetch runs first
     setTimeout(startAlertPolling, 5000); 
 });
+
 
 
 
