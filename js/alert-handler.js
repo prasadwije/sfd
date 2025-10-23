@@ -135,36 +135,48 @@ function displayServerAlert(alertData) {
 
 
 async function sendAlertConfirmation(waitUrl) {
+    // CRITICAL FIX 1: Stop the polling loop immediately before any fetch call
+    clearInterval(alertPollingIntervalId); 
+    alertPollingIntervalId = null;
+
     try {
-        // We get the clear URL from the global CONFIG object
-        const clearStatusBaseUrl = CONFIG.API_URL_ALERT_CLEAR; 
-        
         // --- ACTION 1: RELEASE THE N8N WAIT NODE (Confirms User is present) ---
-        const waitResponse = await fetch(waitUrl, { method: 'GET' });
+        const releaseWaitUrl = waitUrl; 
+        
+        // This stops the Workflow C timeout timer
+        const waitResponse = await fetch(releaseWaitUrl, { method: 'GET' });
         
         if (waitResponse.status === 409) {
-            console.warn("Wait Node already cleared via Timeout (409 Conflict). Proceeding to clear status.");
+             console.warn("Wait Node already cleared via Timeout (409 Conflict). Proceeding to clear status.");
         } else if (!waitResponse.ok) {
              throw new Error(`Failed to release N8N Wait Node. Status: ${waitResponse.status}`);
         }
         
         // --- ACTION 2: CLEAR THE ALERT STATUS (Permanent Clear) ---
-        
-        // This is a direct call to the Workflow F Clear Endpoint
+        // We get the clear URL from the global CONFIG object
+        const clearStatusBaseUrl = CONFIG.API_URL_ALERT_CLEAR; 
         const clearStatusUrl = clearStatusBaseUrl;
 
+        // This second GET call updates the Google Sheet/Alert status to CLEARED.
         const clearResponse = await fetch(clearStatusUrl, { method: 'GET' });
 
         if (!clearResponse.ok) {
              throw new Error(`Failed to clear alert status. Status: ${clearResponse.status}`);
         }
         
-        // --- FINAL SUCCESS ---
-        fetchAndRenderTasks();
-        startAlertPolling(); 
+        // --- FINAL SUCCESS AND RESTART ---
+        
+        // 1. Refresh Task List
+        fetchAndRenderTasks(); 
+        
+        // 2. CRITICAL FIX 2: Delayed Restart of Polling Loop
+        // Wait 3 seconds to allow Google Sheets/N8N to update the status before polling starts again.
+        setTimeout(startAlertPolling, 3000); 
         
     } catch (error) {
         console.error('Failed to clear alert sequence:', error);
+        // If error, just restart polling after a delay to re-check the alert state
+        setTimeout(startAlertPolling, 5000); 
         alert('Confirmation failed. Please check your N8N URL/Origin setup.');
     }
 }
@@ -182,6 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Delay start slightly to ensure initial task fetch runs first
     setTimeout(startAlertPolling, 5000); 
 });
+
 
 
 
