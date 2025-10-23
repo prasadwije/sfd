@@ -40,18 +40,12 @@ async function fetchAlertStatus() {
     }
     
     try {
-        // FIX: Add a strong Cache Buster and Cache Control Headers for the fetch call
+        // FIX 1: Add a strong Cache Buster to the URL to force the browser to fetch fresh data
         const cacheBuster = `&t=${new Date().getTime()}`; 
         const pollingUrl = CONFIG.PUBLIC_ALERT_CSV_URL + cacheBuster;
 
-        const response = await fetch(pollingUrl, {
-             cache: 'no-store', // Force browser not to use local cache
-             headers: {
-                 'Cache-Control': 'no-cache, no-store, must-revalidate',
-                 'Pragma': 'no-cache',
-                 'Expires': '0'
-             }
-        });
+        // FIX 2: We removed headers, relying only on the Cache Buster and simple GET request
+        const response = await fetch(pollingUrl);
         
         if (!response.ok) {
              console.warn('CSV Fetch Failed (CORS or 404).');
@@ -61,12 +55,14 @@ async function fetchAlertStatus() {
         const csvText = await response.text();
         
         // --- CSV PARSING LOGIC ---
+        // Expecting data like: Status,Message,Wait_URL\nPENDING,Your check is due,https://...
         const rows = csvText.trim().split('\n');
         if (rows.length < 2) return; 
 
         // Data is expected on the second row (index 1)
         const dataRow = rows[1].split(',');
         
+        // Check if dataRow has enough columns
         if (dataRow.length < 3) return;
 
         const alertStatus = dataRow[0].trim();
@@ -75,10 +71,9 @@ async function fetchAlertStatus() {
 
         // Alert Status Check
         if (alertStatus === 'PENDING') {
-            // Stop polling immediately as we have received an alert
+            // CRITICAL: Alert is present. Stop polling immediately 
             clearInterval(alertPollingIntervalId);
             
-            // Log successful parsing
             console.warn(`ALERT DETECTED: Status=${alertStatus}, URL=${waitUrl.substring(0, 40)}...`);
 
             // Display the popup
@@ -87,6 +82,9 @@ async function fetchAlertStatus() {
                 wait_url: waitUrl 
             });
         }
+        
+        // If status is CLEARED or any other value, the loop continues (or gets stopped by next run)
+
     } catch (error) {
         console.error('Alert polling failed during parsing:', error.message); 
     }
@@ -148,7 +146,7 @@ async function sendAlertConfirmation(waitUrl) {
 
     try {
         // 1. RELEASE THE N8N WAIT NODE (Confirms User is present)
-        const releaseWaitUrl = waitUrl; 
+        const releaseWaitUrl = waitUrl + '?status=CONFIRMED'; 
         const waitResponse = await fetch(releaseWaitUrl, { method: 'GET' });
         
         if (waitResponse.status === 409) {
@@ -159,32 +157,31 @@ async function sendAlertConfirmation(waitUrl) {
         
         // 2. CLEAR THE ALERT STATUS (Permanent Clear)
         const clearStatusBaseUrl = CONFIG.API_URL_ALERT_CLEAR; 
-        const clearStatusUrl = clearStatusBaseUrl;
+        const clearStatusUrl = clearStatusBaseUrl + (clearStatusBaseUrl.includes('?') ? '&' : '?') + 'status=CLEARED';
 
+        // This second GET call updates the Google Sheet/Alert status to CLEARED.
         const clearResponse = await fetch(clearStatusUrl, { method: 'GET' });
 
         if (!clearResponse.ok) {
              throw new Error(`Failed to clear alert status. Status: ${clearResponse.status}`);
         }
         
-        // --- FINAL SUCCESS AND DELAYED RESTART ---
+        // --- FINAL SUCCESS AND RESTART ---
         
-        // Refresh Task List (App.js) immediately
         fetchAndRenderTasks(); 
-        fetchAndRenderKPI();
+        fetchAndRenderKPI(); 
         
-        // CRITICAL FIX 2: Delayed Restart (Wait 10 seconds for Google Sheets to PUBLISH the change)
-        // Google Sheets can take 5-10 seconds to update the public CSV view.
-        setTimeout(startAlertPolling, 10000); // Wait 10 seconds before polling again
+        // CRITICAL FIX: Restart Polling after a minimum delay (5 seconds)
+        // This gives the N8N/Google Sheet pipeline time to fully process the 'CLEARED' status.
+        setTimeout(startAlertPolling, 5000); 
         
     } catch (error) {
         console.error('Failed to clear alert sequence:', error);
-        // If error, restart polling after a shorter delay to retry the clear process
+        // If error, just restart polling after a delay to retry the alert check
         setTimeout(startAlertPolling, 5000); 
         alert('Confirmation failed. Please check your N8N URL/Origin setup.');
     }
 }
-
 // --- EXPOSE/INTEGRATE WITH APP.JS ---
 document.addEventListener('DOMContentLoaded', () => {
     // Map required elements after DOMContentLoaded for safety
@@ -198,6 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Delay start slightly to ensure initial task fetch runs first
     setTimeout(startAlertPolling, 5000); 
 });
+
 
 
 
