@@ -119,8 +119,8 @@ button {
 .top-kpi-control-area {
     display: flex;
     min-height: 200px;
-    max-height: 25%; 
-    gap: 30px; 
+    max-height: 250px; 
+    gap: 40px; 
     margin-bottom: 25px;
     padding-bottom: 20px;
     border-bottom: 1px solid var(--color-border);
@@ -199,7 +199,7 @@ button {
     display: flex;
     gap: 12px;
     padding-top: 15px;
-    padding-left: 120px;
+    /* padding-left: 120px; */
     
 }
 
@@ -589,5 +589,6 @@ button {
 /* Social Media (Red/Urgent) */
 #grad-social stop { stop-color: var(--c-red); }
 #grad-social stop:first-child { stop-color: #FF5555; /* Lighter start */ }
+
 
 
